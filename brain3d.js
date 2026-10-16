@@ -26,7 +26,16 @@ const palette={frontal:0xa18dea,parietal:0x4eb8a9,temporal:0xefaa75,occipital:0x
 const state={slide:'intro',key:'cerebrum',quizIndex:0,panelOpen:true};
 const defaultViews={intro:[-.52,-.07],architecture:[-.95,-.08],lobes:[-.77,-.02],cortex:[-.9,-.17],deep:[1.55,.05],stem:[2.33,-.16],meninges:[-.26,.02],ventricles:[1.63,.08],development:[-.42,-.12],quiz:[-.8,-.06]};
 const eligibleOptions={intro:['cerebrum','cerebellum','stem'],architecture:['cerebrum','cerebellum','stem'],lobes:['frontal','parietal','temporal','occipital','insula'],cortex:['cortex','precentral','postcentral','insula'],deep:['thalamus','hypothalamus','pituitary','hippocampus'],stem:['midbrain','pons','medulla','cerebellum'],ventricles:['lateral','third','aqueduct','fourth','subarachnoid'],development:['forebrain','midbrain','hindbrain']};
-const matches=(name,which)=>!!targets[which]?.some(p=>name===p||name===p+'-1'||name===p+'.001');
+// BodyParts3D contains separate LEFT and RIGHT hemisphere meshes, e.g.
+// `left-precentral-gyrus`, while our UI uses the shared anatomical term.
+// The previous exact comparison missed those meshes, leaving the whole brain ghosted.
+const matches=(name,which)=>{
+ const requested=targets[which];
+ if(!requested)return false;
+ const full=String(name).toLowerCase().replace(/[_.\s]+/g,'-');
+ const base=full.replace(/^(left|right)-/,'');
+ return requested.some(part=>[full,base].some(n=>n===part||n===part+'-1'||n===part+'-2'));
+};
 const groups=['cerebellum','midbrain','pons','medulla','frontal','parietal','temporal','occipital','insula','thalamus','hypothalamus','pituitary','hippocampus','lateral','third','fourth'];
 const category=(name)=>groups.find(g=>matches(name,g))||'other';
 const stemNames=['midbrain','pons','medulla'];
@@ -46,6 +55,9 @@ function resolveQuizKey(i){return ['precentral','insula','cerebrum','cerebellum'
 function deriveKey(){return state.slide==='quiz'?resolveQuizKey(state.quizIndex):state.key;}
 function pickedKey(name,cat){if(state.slide==='meninges'||state.slide==='quiz')return null;
  const available=eligibleOptions[state.slide]||[];
+ // Prioritize the exact anatomical mesh over broad groups (e.g. cortex).
+ const specific=available.find(opt=>targets[opt]&&matches(name,opt));
+ if(specific)return specific;
  for(const opt of available){if(opt==='cortex'&&['frontal','parietal','temporal','occipital'].includes(cat))return opt;
   if(opt==='forebrain'&&isHit(name,cat,'forebrain'))return opt;
   if(opt==='hindbrain'&&isHit(name,cat,'hindbrain'))return opt;
@@ -65,11 +77,21 @@ async function importDeps(){
  catch(e){console.info('Vendor Three.js unavailable, trying pinned CDN.',e.message);}
  const T=await import(CORE_CDN);const {GLTFLoader}=await import(LOADER_CDN);return {T,GLTFLoader};
 }
-function colorMat(hex){if(!colorMaterials.has(hex))colorMaterials.set(hex,new Three.MeshStandardMaterial({color:hex,roughness:.77,metalness:.03,side:Three.DoubleSide,emissive:hex,emissiveIntensity:.25,transparent:false,depthWrite:true}));return colorMaterials.get(hex)}
+function colorMat(hex){
+ if(!colorMaterials.has(hex))colorMaterials.set(hex,new Three.MeshStandardMaterial({
+  color:hex,roughness:.77,metalness:.03,side:Three.DoubleSide,
+  emissive:hex,emissiveIntensity:.52,
+  // Both ghost and selected meshes must share the transparent render queue.
+  // The selected region is drawn LAST (renderOrder) so small/deep parts remain
+  // visible THROUGH the faint outline of the surrounding anatomy.
+  transparent:true,opacity:1,depthWrite:false,depthTest:false
+ }));
+ return colorMaterials.get(hex);
+}
 function baseGhost(){return new Three.ShaderMaterial({
  transparent:true,depthWrite:false,depthTest:true,side:Three.DoubleSide,uniforms:{uColor:{value:new Three.Color(0x6a9b98)},uAlpha:{value:1}},
  vertexShader:`varying vec3 vNormal;varying vec3 vView;void main(){vec4 world=modelMatrix*vec4(position,1.);vec4 eye=viewMatrix*world;vNormal=normalize(normalMatrix*normal);vView=normalize(-eye.xyz);gl_Position=projectionMatrix*eye;}`,
- fragmentShader:`uniform vec3 uColor;uniform float uAlpha;varying vec3 vNormal;varying vec3 vView;void main(){float rim=pow(1.-abs(dot(normalize(vNormal),normalize(vView))),3.6);float a=(.016+rim*.31)*uAlpha;gl_FragColor=vec4(uColor,a);}`
+ fragmentShader:`uniform vec3 uColor;uniform float uAlpha;varying vec3 vNormal;varying vec3 vView;void main(){float rim=pow(1.-abs(dot(normalize(vNormal),normalize(vView))),3.6);float a=(.012+rim*.24)*uAlpha;gl_FragColor=vec4(uColor,a);}`
  });}
 function loadGLB(url,loader){return new Promise((resolve,reject)=>{
  const timer=setTimeout(()=>reject(new Error('GLB timeout')),20000);
@@ -108,21 +130,30 @@ async function init(){try{
   meshes.push({obj,name,cat,active:false});
  });
  if(meshes.length<12)throw Error('GLB не содержит ожидаемую сегментированную анатомию');
+ const absent=Object.keys(targets).filter(which=>!meshes.some(p=>matches(p.name,which)));
+ if(absent.length)console.warn('[NEURO 3D] Region names absent in model:',absent);
  applyFocus();resize();attachPointer();ready=true;request();message(true,'');
  }catch(e){console.warn('[NEURO cinematic 3D]',e);message(false,'3D не загрузилась; доступна учебная 2D-схема. Для офлайн-работы модели запустите скрипт установки.');}}
 function applyFocus(){if(!meshes.length)return;
  const key=deriveKey();const conceptual=state.slide==='meninges';
+ let highlighted=0;
  for(const p of meshes){let hit=isHit(p.name,p.cat,key);
   if(conceptual){hit=p.cat!=='other' && !['lateral','third','fourth'].includes(p.cat);}
+  if(conceptual&&key==='arachnoid')hit=false;
   p.active=hit;
   const color=palette[key]||palette[p.cat]||0xa1b9ba;
-  if(conceptual&&key==='arachnoid')p.obj.material=ghostMaterial;
-  else if(conceptual&&key==='dura')p.obj.material=hit?colorMat(color):ghostMaterial;
-  else p.obj.material=hit?colorMat(color):ghostMaterial;
+  p.obj.material=hit?colorMat(color):ghostMaterial;
+  // The atlas contains overlapping meshes. Rendering the chosen meshes after
+  // ghost meshes makes the actual part visible instead of hiding in the wire-like
+  // silhouette, including the insula and hippocampus inside the hemispheres.
+  p.obj.renderOrder=hit?20:0;
+  if(hit)highlighted++;
  }
- if(state.slide==='meninges'&&key==='arachnoid')ghostMaterial.uniforms.uAlpha.value=2.15;
- else if(state.slide==='meninges'&&key==='dura')ghostMaterial.uniforms.uAlpha.value=.75;
- else ghostMaterial.uniforms.uAlpha.value=1.0;
+ if(state.slide==='meninges'&&key==='arachnoid')ghostMaterial.uniforms.uAlpha.value=.75;
+ else if(state.slide==='meninges'&&key==='dura')ghostMaterial.uniforms.uAlpha.value=.34;
+ else if(['insula','hippocampus','thalamus','hypothalamus','pituitary'].includes(key))ghostMaterial.uniforms.uAlpha.value=.2;
+ else ghostMaterial.uniforms.uAlpha.value=.37;
+ if(!highlighted&&key!=='arachnoid')console.warn('[NEURO 3D] No matching GLB meshes for',key,'on slide',state.slide);
  request();}
 function targetView(){const v=defaultViews[state.slide]||[-.5,0];aimYaw=v[0];aimPitch=v[1];
  if(state.key==='insula'||state.key==='hippocampus'||state.key==='thalamus'||state.key==='hypothalamus'||state.key==='pituitary')aimYaw=1.45;
