@@ -12,3 +12,7 @@
 ## 3D-анатомия (версия с 3D)
 
 **Источник**: BodyParts3D, © The Database Center for Life Science (DBCLS). GLB собран из мешей Brain Anatomy Game / Pyae Sone Myo: https://github.com/Rickaym/brain-game (commit `e4c2e6dc0df6976b33426f17c164c2c50c711587`, `public/models/brain.glb`). **Лицензия анатомических объектов: CC BY-SA 2.1 Japan**: https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html. Использование сохраняет исходную пообъектную геометрию, при отображении меняются цвета и прозрачность. Производная модель, если будет изменяться/публиковаться, должна распространяться на условиях share-alike. См. [3D_MODEL.md](3D_MODEL.md).
+
+## Three.js runtime
+
+Runtime: Three.js 0.181.0, MIT license. Installation script vendors its unmodified official npm-distributed modules and LICENSE from npm. https://threejs.org/

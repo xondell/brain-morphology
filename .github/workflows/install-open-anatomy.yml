@@ -1,27 +1,35 @@
-name: Install open anatomical 3D model
+name: Install Brain 3D + Three.js
 on:
   workflow_dispatch:
   push:
     paths:
-      - .github/workflows/install-open-anatomy.yml
+      - '.github/workflows/install-open-anatomy.yml'
+      - 'scripts/download-anatomy-model.sh'
+      - 'scripts/install-three-vendor.sh'
 permissions:
   contents: write
 jobs:
-  vendor-brain:
+  vendor-model-and-engine:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           persist-credentials: true
-      - name: Download and verify CC BY-SA model
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download pinned BodyParts3D GLB and verify Git object SHA
         run: bash scripts/download-anatomy-model.sh
-      - name: Commit binary model to repository
+      - name: Vendor Three.js runtime from pinned npm version
+        run: bash scripts/install-three-vendor.sh
+      - name: Commit licensed model and Three.js runtime
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/brain.glb
+          git add assets/brain.glb vendor/three
           if ! git diff --cached --quiet; then
-            git commit -m 'Add licensed BodyParts3D anatomical model (2.8MB)'
+            git commit -m 'Vendor CC BY-SA 3D anatomy and Three.js runtime'
             git push
           fi

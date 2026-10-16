@@ -2,42 +2,53 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f4f6f3">
-  <meta name="description" content="Интерактивный анатомический атлас: морфология головного мозга. Доли, глубокие структуры, мозжечок, оболочки и ликвор.">
-  <title>Морфология головного мозга — интерактивный атлас</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#e7f0ed">
+  <meta name="description" content="Полноэкранная интерактивная 3D-презентация о морфологии головного мозга. Анатомическая модель BodyParts3D, прозрачные структуры, 10 глав.">
+  <title>Морфология головного мозга · NEURO 3D</title>
   <link rel="stylesheet" href="styles.css">
+  <script type="importmap">{"imports":{"three":"./vendor/three/build/three.module.js","three/addons/":"./vendor/three/examples/jsm/"}}</script>
+  <script src="content-data.js" defer></script>
+  <script src="anatomy-fallback.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
-<div id="app" class="app" data-mode="presentation">
-  <header class="masthead">
-    <a class="brand" href="#intro" id="logoLink" aria-label="К началу презентации">
-      <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
-      <span><b>NEURO</b><small>АНАТОМИЧЕСКИЙ АТЛАС</small></span>
-    </a>
-    <nav class="top-actions" aria-label="Режим и материалы">
-      <button id="modeToggle" class="top-pill" aria-label="Режим изучения" type="button" aria-pressed="false" title="Переключить режимы">☰ <span>Изучение</span></button>
-      <button id="sourceButton" class="top-pill" aria-label="Источники" type="button">↗ <span>Источники</span></button>
-      <button id="notesButton" class="top-pill" aria-label="Заметки" type="button" aria-keyshortcuts="N">◧ <span>Заметки</span></button>
-      <button id="fullButton" class="top-pill top-icon" type="button" aria-label="Полноэкранный режим" aria-keyshortcuts="F">⛶</button>
-    </nav>
+<div id="experience" class="experience" data-panel="open">
+  <div id="brainViewport" class="brain-viewport" role="group" aria-label="Интерактивная 3D-модель головного мозга">
+    <div id="brainCanvas" class="brain-canvas"></div>
+    <div id="fallback" class="brain-fallback" aria-live="polite">
+      <div class="fallback-art" id="fallbackArt"></div>
+      <p id="modelStatus">Загрузка анатомической 3D-модели…</p>
+    </div>
+  </div>
+  <div class="background-haze" aria-hidden="true"></div>
+  <header class="topbar">
+    <div class="brand"><span class="brand-symbol" aria-hidden="true">◉</span><span><b>NEURO</b><small>3D АТЛАС</small></span></div>
+    <div class="header-actions">
+      <button type="button" class="top-action" id="togglePanel" aria-expanded="true" aria-label="Скрыть текст" aria-controls="lessonPanel">◧ <span>Скрыть текст</span></button>
+      <button type="button" class="top-action" id="notesButton" title="Заметки ведущего (N)">Заметки</button>
+      <button type="button" class="top-action" id="sourcesButton">Источники</button>
+      <button type="button" class="top-action icon" id="fullscreenButton" aria-label="На весь экран (F)" title="Полный экран (F)">⛶</button>
+    </div>
   </header>
-  <main id="deck" aria-live="off" aria-label="Презентация Морфология головного мозга">
-    <div class="loading-message">Подготовка интерактивного атласа…</div>
+  <main id="lessonPanel" class="lesson-panel" tabindex="-1" aria-label="Текст текущей главы">
+    <div id="lessonInner" class="lesson-inner" aria-live="polite"></div>
   </main>
-  <footer class="deck-footer" id="deckFooter">
-    <div class="foot-left"><span class="foot-number" id="slidePosition">01 / 10</span><span class="foot-caption" id="slideCaption">Введение</span></div>
-    <div class="progress-rail" id="progressRail" role="group" aria-label="Перейти к главе"></div>
-    <div class="foot-controls"><button id="prevBtn" class="arrow-btn" type="button" aria-label="Предыдущий слайд">←</button><button id="nextBtn" class="arrow-btn main-next" type="button" aria-label="Следующий слайд">→</button></div>
+  <div class="scene-caption" id="sceneCaption" aria-live="polite"></div>
+  <div class="model-tools" role="group" aria-label="Управление 3D-моделью">
+    <button type="button" id="spinButton" class="tool-button" aria-pressed="true" title="Приостановить вращение">⟳ <span>Вращение</span></button>
+    <button type="button" id="resetButton" class="tool-button" title="Сбросить ракурс">⌖ <span>Ракурс</span></button>
+    <button type="button" id="zoomIn" class="tool-button icon" aria-label="Приблизить модель">＋</button>
+    <button type="button" id="zoomOut" class="tool-button icon" aria-label="Отдалить модель">−</button>
+  </div>
+  <footer class="bottom-nav" aria-label="Навигация по главам">
+    <div class="chapter-index"><strong id="slideCount">01 <span>/ 10</span></strong><small id="slideName">Введение</small></div>
+    <div class="chapter-timeline" id="timeline" role="group" aria-label="Выберите слайд"></div>
+    <div class="arrows"><button type="button" id="backButton" aria-label="Предыдущая глава">←</button><button type="button" id="forwardButton" aria-label="Следующая глава">→</button></div>
   </footer>
-  <div class="shortcut-hint" id="hint"><kbd>←</kbd> <kbd>→</kbd> листайте слайды <span>·</span> <kbd>N</kbd> заметки <span>·</span> <kbd>F</kbd> экран</div>
-  <div id="toast" role="status" aria-live="polite" class="toast" hidden></div>
-  <dialog id="infoDialog" class="sheet" aria-labelledby="dialogTitle">
-    <div class="sheet-heading"><span class="eyebrow">NEURO / АТЛАС</span><button class="sheet-close" type="button" id="dialogClose" aria-label="Закрыть">×</button></div>
-    <h2 id="dialogTitle"></h2><div id="dialogContent" class="dialog-content"></div>
-  </dialog>
+  <div class="credit-line">3D-анатомия: BodyParts3D / DBCLS · CC BY-SA 2.1 JP</div>
+  <dialog id="infoDialog" class="info-dialog"><button type="button" class="close-dialog" id="closeDialog" aria-label="Закрыть">×</button><h2 id="dialogTitle"></h2><div id="dialogBody"></div></dialog>
 </div>
-<script type="module" src="./brain3d.js"></script>
+<script type="module" src="brain3d.js"></script>
 </body>
 </html>
