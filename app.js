@@ -156,18 +156,31 @@ const quiz = [
 ];
 
 const chip = (key,title,color,group='')=>`<button type="button" class="region-chip" data-select="${key}" data-group="${group}" aria-pressed="false"><span class="swatch" style="--swatch:${color}"></span>${title}</button>`;
+const modelStage = (slide, svg, badge) => `<div class="visual-space brain3d-frame" data-brain3d="${slide}">
+  <div class="brain3d-view" aria-label="Трёхмерная анатомическая модель мозга. Поверните перетаскиванием, прокручивайте для приближения.">
+    <div class="brain3d-fallback">${svg}</div>
+    <div class="brain3d-host" role="img" aria-label="Настоящая 3D-модель мозга из BodyParts3D: интерактивный поворот и подсветка отделов"></div>
+    <span class="brain3d-state" role="status">Подготовка анатомической 3D-модели…</span>
+  </div>
+  <div class="brain3d-toolbar" role="group" aria-label="Управление моделью">
+    <button type="button" data-brain-tool="spin" aria-pressed="true" aria-label="Включить или выключить вращение">↻ <span>Вращение</span></button>
+    <button type="button" data-brain-tool="reset" aria-label="Сбросить поворот камеры">⌖ <span>Сброс</span></button>
+    <button type="button" data-brain-tool="2d" aria-pressed="false" aria-label="Переключить 2D-схему и 3D-модель">◧ <span>2D-схема</span></button>
+  </div>
+  <span class="scene-badge">${badge}</span>
+</div>`;
 const detail = `<div class="detail-card" aria-live="polite"><span class="detail-kicker">Нажмите на элемент</span><h3 class="detail-title">Выберите область</h3><p class="detail-body">Название, положение и строение выбранной части появятся здесь.</p></div>`;
 function makeContent(s){
  const head=`<div class="copy"><div class="section-index"><span class="index-line"></span>${s.eyebrow}</div><h${s.type==='hero'?'1':'2'}>${s.title}</h${s.type==='hero'?'1':'2'}><p class="lead">${s.lead}</p>`;
  let left=head, visual='';
  switch(s.type){
  case 'hero': left+=`<span class="minitag">● УЧЕБНАЯ ПРЕЗЕНТАЦИЯ · 10 СЦЕН</span><div class="stat-pair"><div><strong>4 + 1</strong><small>доли, включая скрытый островок</small></div><div><strong>3</strong><small>части ствола мозга</small></div></div><p class="copy-footnote">${s.foot}</p>`;
- visual=`<div class="visual-space"><div class="orb orb--mint"></div><div class="orb orb--peach"></div>${lateralSVG('hero','overview')}<span class="scene-badge">ЛАТЕРАЛЬНАЯ ПРОЕКЦИЯ · СХЕМА</span></div>`;break;
- case 'overview':left+=`<div class="chip-grid chip-grid--three">${chip('cerebrum','Большой мозг','#c8bbf0')}${chip('cerebellum','Мозжечок','#70b2a5')}${chip('stem','Ствол','#4d8582')}</div>${detail}<p class="lesson-hint">Нажмите на область рисунка или подпись.</p>`;visual=`<div class="visual-space"><div class="orb orb--lilac"></div>${lateralSVG('overview','overview')}</div>`;break;
- case 'lobes':left+=`<div class="chip-grid">${chip('frontal','Лобная','#c8bbf0')}${chip('parietal','Теменная','#8ecac2')}${chip('temporal','Височная','#f0b795')}${chip('occipital','Затылочная','#89b1db')}${chip('insula','Островковая · скрыта','#d4a5cf')}</div>${detail}`;visual=`<div class="visual-space"><div class="orb orb--mint"></div>${lateralSVG('lobes')}<span class="scene-badge">← ПЕРЕД · ЗАД →</span></div>`;break;
+ visual=modelStage('intro', lateralSVG('hero','overview'), 'ИНТЕРАКТИВНАЯ МОДЕЛЬ · BODYParts3D');break;
+ case 'overview':left+=`<div class="chip-grid chip-grid--three">${chip('cerebrum','Большой мозг','#c8bbf0')}${chip('cerebellum','Мозжечок','#70b2a5')}${chip('stem','Ствол','#4d8582')}</div>${detail}<p class="lesson-hint">Нажмите на область рисунка или подпись.</p>`;visual=modelStage('architecture', lateralSVG('overview','overview'), 'КРУТИТЕ МОДЕЛЬ · ВЫБИРАЙТЕ ЧАСТИ');break;
+ case 'lobes':left+=`<div class="chip-grid">${chip('frontal','Лобная','#c8bbf0')}${chip('parietal','Теменная','#8ecac2')}${chip('temporal','Височная','#f0b795')}${chip('occipital','Затылочная','#89b1db')}${chip('insula','Островковая · скрыта','#d4a5cf')}</div>${detail}`;visual=modelStage('lobes', lateralSVG('lobes'), 'ДОЛИ ПОЛУШАРИЙ · 3D');break;
  case 'cortex':left+=`<div class="pill-toggle" role="group" aria-label="Подсветка ткани"><button type="button" data-tissue="gray" aria-pressed="true">Серое</button><button type="button" data-tissue="white" aria-pressed="false">Белое</button></div><div class="detail-card" id="tissueDetail"><span class="detail-kicker">СЕРОЕ ВЕЩЕСТВО</span><h3 class="detail-title">Кора больших полушарий</h3><p class="detail-body">Наружный слой, богатый телами нейронов. Серое вещество также образует ядра в глубине мозга.</p></div><p class="lesson-hint">Сравните, где находятся два типа вещества.</p>`;visual=`<div class="visual-space"><div class="orb orb--mint"></div>${tissueSVG()}<span class="scene-badge">УСЛОВНЫЙ СРЕЗ · НЕ В МАСШТАБЕ</span></div>`;break;
- case 'deep':left+=`<div class="chip-grid">${chip('callosum','Мозолистое тело','#e9e2b5')}${chip('thalamus','Таламус','#9bc5b4')}${chip('hypothalamus','Гипоталамус','#eab58f')}${chip('pituitary','Гипофиз','#cf918e')}${chip('midbrain','Средний мозг','#81b3ac')}</div>${detail}`;visual=`<div class="visual-space"><div class="orb orb--lilac"></div>${sagittalSVG('deep','deep')}<span class="scene-badge">СРЕДИННЫЙ САГИТТАЛЬНЫЙ СРЕЗ · СХЕМА</span></div>`;break;
- case 'stem':left+=`<div class="chip-grid">${chip('midbrain','Средний мозг','#70ada8')}${chip('pons','Мост','#81bbb2')}${chip('medulla','Продолговатый мозг','#467f79')}${chip('cerebellum','Мозжечок','#f0c2ad')}</div>${detail}`;visual=`<div class="visual-space"><div class="orb orb--mint"></div>${sagittalSVG('stem','stem')}<span class="scene-badge">СРЕЗ ПО СРЕДИННОЙ ЛИНИИ</span></div>`;break;
+ case 'deep':left+=`<div class="chip-grid">${chip('callosum','Мозолистое тело','#e9e2b5')}${chip('thalamus','Таламус','#9bc5b4')}${chip('hypothalamus','Гипоталамус','#eab58f')}${chip('pituitary','Гипофиз','#cf918e')}${chip('midbrain','Средний мозг','#81b3ac')}</div>${detail}`;visual=modelStage('deep', sagittalSVG('deep','deep'), 'СКРЫТЫЕ СТРУКТУРЫ · 3D');break;
+ case 'stem':left+=`<div class="chip-grid">${chip('midbrain','Средний мозг','#70ada8')}${chip('pons','Мост','#81bbb2')}${chip('medulla','Продолговатый мозг','#467f79')}${chip('cerebellum','Мозжечок','#f0c2ad')}</div>${detail}`;visual=modelStage('stem', sagittalSVG('stem','stem'), 'СТВОЛ И МОЗЖЕЧОК · 3D');break;
  case 'meninges':left+=`<div class="chip-grid chip-grid--three">${chip('dura','Твёрдая','#cdbfdf')}${chip('arachnoid','Паутинная','#c6e3e5')}${chip('pia','Мягкая','#edb7a7')}</div>${detail}`;
  visual=`<div class="meninges-wrap"><div class="eyebrow" style="margin-bottom:16px">ПО НАПРАВЛЕНИЮ К ЦЕНТРУ ↓</div><div class="layers-art"><div class="layer-item" style="--layer:#e6ded4"><span>Черепная кость</span><span>защита</span></div><button class="layer-item" style="--layer:#d9cfec" data-layer="dura" type="button" aria-pressed="false"><span>Твёрдая оболочка</span><span>dura mater</span></button><button class="layer-item" style="--layer:#d2e8eb" data-layer="arachnoid" type="button" aria-pressed="false"><span>Паутинная оболочка</span><span>arachnoidea</span></button><div class="layer-item" style="--layer:#dcefed"><span>Подпаутинное пространство</span><span>ликвор</span></div><button class="layer-item" style="--layer:#f5d6ca" data-layer="pia" type="button" aria-pressed="false"><span>Мягкая оболочка</span><span>pia mater</span></button><div class="layer-item" style="--layer:#d2e8e0"><span>Кора головного мозга</span><span>нервная ткань</span></div></div><p class="copy-footnote" style="margin-bottom:0">Упрощённая послойная схема: расстояния между слоями условны.</p></div>`;break;
  case 'flow':left+=`<div class="detail-card" id="flowDetail"><span class="detail-kicker">ЭТАП 1 / 5</span><h3 class="detail-title">Боковые желудочки</h3><p class="detail-body">По одному в каждом полушарии. Здесь находятся сосудистые сплетения, вырабатывающие значительную часть ликвора.</p></div><div class="flow-controls"><button id="flowPrev" class="small-action" type="button">← Назад</button><button id="flowNext" class="small-action" type="button">Дальше →</button><button id="flowPlay" class="small-action" type="button" aria-pressed="false">▶ Автопоказ</button></div>`;
@@ -203,7 +216,7 @@ function navigate(target,init=false){
  const previous=sceneEls[state.current],next=sceneEls[target];
  const swap=()=>{
   sceneEls.forEach((s,i)=>{s.hidden=i!==target;s.classList.remove('scene-leave','scene-enter')});
-  state.current=target;next.hidden=false;updateChrome();
+  state.current=target;next.hidden=false;updateChrome();document.dispatchEvent(new CustomEvent('neuro:slide', {detail:{id:next.id}}));
   if(state.mode==='presentation')window.scrollTo({top:0,behavior:'instant'});
   if(!reducedMotion.matches&&!init)next.classList.add('scene-enter');
   state.transitioning=false;clearTimeout(lockTimeout);
@@ -215,6 +228,7 @@ function switchMode(){
  stopFlow(); const next=state.mode==='presentation'?'explore':'presentation';state.mode=next;
  app.dataset.mode=next;$('#modeToggle').setAttribute('aria-pressed',String(next==='explore'));$('#modeToggle').setAttribute('aria-label',next==='explore'?'Режим презентации':'Режим изучения');
  $('#modeToggle').innerHTML=next==='explore'?'◩ <span>Показ</span>':'☰ <span>Изучение</span>';
+ document.dispatchEvent(new CustomEvent('neuro:mode',{detail:{mode:next}}));
  if(next==='explore'){
   sceneEls.forEach(s=>{s.hidden=false;s.classList.remove('scene-leave','scene-enter')});
   state.transitioning=false;clearTimeout(lockTimeout);
@@ -234,7 +248,7 @@ function openDialog(type){const dlg=$('#infoDialog'),title=$('#dialogTitle'),con
   $('.notes-text',content).textContent=s.notes;
  }else{
   title.textContent='Научные источники';
-  content.innerHTML=`<p>Факты и анатомические подписи сверены с университетскими и клиническими источниками. Иллюстрации специально нарисованы как <strong>схемы</strong> и не заменяют анатомический атлас.</p><ol class="sources-list">${sources.map(s=>`<li><a href="${s.url}" target="_blank" rel="noopener noreferrer">${s.label}</a><br><small>${s.note}</small></li>`).join('')}</ol><p class="source-warning">Иллюстрации оригинальные, анатомически упрощённые, не в масштабе. Ссылки доступны на этой странице, но не встроены в повествовательные слайды.</p>`;
+  content.innerHTML=`<p>Анатомические подписи сверены с университетскими и клиническими источниками. 2D-иллюстрации являются <strong>упрощёнными схемами</strong>; 3D-сетки заимствованы из открытой анатомической базы BodyParts3D, не предназначены для диагностики.</p><ol class="sources-list">${sources.map(s=>`<li><a href="${s.url}" target="_blank" rel="noopener noreferrer">${s.label}</a><br><small>${s.note}</small></li>`).join('')}</ol><p class="source-warning"><strong>3D-атрибуция:</strong> BodyParts3D © The Database Center for Life Science (DBCLS), CC BY-SA 2.1 Japan. Компоновка модели — Pyae Sone Myo, проект Brain Anatomy Game (Rickaym). 3D-модель разделена на самостоятельные анатомические меши; 2D-схемы нарисованы отдельно. <a href="https://github.com/Rickaym/brain-game" target="_blank" rel="noopener noreferrer">Источник модели</a> · <a href="https://dbarchive.biosciencedbc.jp/en/bodyparts3d/lic.html" target="_blank" rel="noopener noreferrer">Условия лицензии</a>.</p>`;
  }
  if(typeof dlg.showModal==='function')dlg.showModal();else{dlg.setAttribute('open','');notify('Диалог открыт. Чтобы закрыть, нажмите ×.')}
 }
@@ -248,6 +262,7 @@ function showDetail(scene,type,key){const found=details[type]?.[key];if(!found)r
  $$('.embryo-svg [data-embryo]',scene).forEach(g=>{g.classList.toggle('active',g.dataset.embryo===key);g.classList.toggle('dimmed',g.dataset.embryo!==key)});
  $$('.layer-item[data-layer]',scene).forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.layer===key)));
  const c=$('.detail-card',scene);if(c){$('.detail-kicker',c).textContent=found.tag;$('.detail-title',c).textContent=found.title;$('.detail-body',c).textContent=found.body}
+ document.dispatchEvent(new CustomEvent('neuro:select', {detail: {slide:scene.id, type, key}}));
  if(type==='lobes'&&key==='insula'){$$('.lobe-region',scene).forEach(g=>g.classList.remove('dimmed'));}
 }
 function initSelectors(){
@@ -265,7 +280,7 @@ function initSelectors(){
   $$('.layer-item[data-layer]',scene).forEach(b=>b.addEventListener('click',()=>showDetail(scene,'meninges',b.dataset.layer)));
  });
  showDetail($('#architecture'),'overview','cerebrum');showDetail($('#lobes'),'lobes','frontal');
- showDetail($('#deep'),'deep','callosum');showDetail($('#stem'),'stem','midbrain');
+ showDetail($('#deep'),'deep','thalamus');showDetail($('#stem'),'stem','midbrain');
  showDetail($('#meninges'),'meninges','dura');showDetail($('#development'),'embryo','forebrain');
  $('#cortex').querySelectorAll('[data-tissue]').forEach(b=>b.addEventListener('click',()=>selectTissue(b.dataset.tissue)));
 }
@@ -284,6 +299,7 @@ const flowData=[
 function updateFlow(index,manual=true){if(manual)stopFlow();state.flowStep=Math.max(0,Math.min(flowData.length-1,index));
  $$('.flow-step').forEach((b,i)=>b.setAttribute('aria-pressed',String(i===state.flowStep)));
  const d=flowData[state.flowStep],c=$('#flowDetail');$('.detail-kicker',c).textContent=d.tag;$('.detail-title',c).textContent=d.title;$('.detail-body',c).textContent=d.body;
+ document.dispatchEvent(new CustomEvent('neuro:flow',{detail:{step:state.flowStep}}));
  $('#flowPrev').disabled=state.flowStep===0;$('#flowNext').disabled=state.flowStep===flowData.length-1;
 }
 function flowAutoplay(){if(state.flowTimer){stopFlow();return} if(reducedMotion.matches){notify('Автопоказ отключён при настройке «Уменьшение движения». Используйте кнопки.');return}

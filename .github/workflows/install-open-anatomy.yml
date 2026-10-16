@@ -1,0 +1,27 @@
+name: Install open anatomical 3D model
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/install-open-anatomy.yml
+permissions:
+  contents: write
+jobs:
+  vendor-brain:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Download and verify CC BY-SA model
+        run: bash scripts/download-anatomy-model.sh
+      - name: Commit binary model to repository
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/brain.glb
+          if ! git diff --cached --quiet; then
+            git commit -m 'Add licensed BodyParts3D anatomical model (2.8MB)'
+            git push
+          fi

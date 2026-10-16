@@ -1,0 +1,1 @@
+3D body model: `bash scripts/download-anatomy-model.sh` downloads verified real anatomical `brain.glb` here. Without it the viewer uses the pinned public source at runtime. Model from BodyParts3D © DBCLS, CC BY-SA 2.1 Japan; assembly by Brain Anatomy Game / Pyae Sone Myo. See docs/3D_MODEL.md.
