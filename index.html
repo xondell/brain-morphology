@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f6f3">
+  <meta name="description" content="Интерактивный анатомический атлас: морфология головного мозга. Доли, глубокие структуры, мозжечок, оболочки и ликвор.">
+  <title>Морфология головного мозга — интерактивный атлас</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+<div id="app" class="app" data-mode="presentation">
+  <header class="masthead">
+    <a class="brand" href="#intro" id="logoLink" aria-label="К началу презентации">
+      <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+      <span><b>NEURO</b><small>АНАТОМИЧЕСКИЙ АТЛАС</small></span>
+    </a>
+    <nav class="top-actions" aria-label="Режим и материалы">
+      <button id="modeToggle" class="top-pill" aria-label="Режим изучения" type="button" aria-pressed="false" title="Переключить режимы">☰ <span>Изучение</span></button>
+      <button id="sourceButton" class="top-pill" aria-label="Источники" type="button">↗ <span>Источники</span></button>
+      <button id="notesButton" class="top-pill" aria-label="Заметки" type="button" aria-keyshortcuts="N">◧ <span>Заметки</span></button>
+      <button id="fullButton" class="top-pill top-icon" type="button" aria-label="Полноэкранный режим" aria-keyshortcuts="F">⛶</button>
+    </nav>
+  </header>
+  <main id="deck" aria-live="off" aria-label="Презентация Морфология головного мозга">
+    <div class="loading-message">Подготовка интерактивного атласа…</div>
+  </main>
+  <footer class="deck-footer" id="deckFooter">
+    <div class="foot-left"><span class="foot-number" id="slidePosition">01 / 10</span><span class="foot-caption" id="slideCaption">Введение</span></div>
+    <div class="progress-rail" id="progressRail" role="group" aria-label="Перейти к главе"></div>
+    <div class="foot-controls"><button id="prevBtn" class="arrow-btn" type="button" aria-label="Предыдущий слайд">←</button><button id="nextBtn" class="arrow-btn main-next" type="button" aria-label="Следующий слайд">→</button></div>
+  </footer>
+  <div class="shortcut-hint" id="hint"><kbd>←</kbd> <kbd>→</kbd> листайте слайды <span>·</span> <kbd>N</kbd> заметки <span>·</span> <kbd>F</kbd> экран</div>
+  <div id="toast" role="status" aria-live="polite" class="toast" hidden></div>
+  <dialog id="infoDialog" class="sheet" aria-labelledby="dialogTitle">
+    <div class="sheet-heading"><span class="eyebrow">NEURO / АТЛАС</span><button class="sheet-close" type="button" id="dialogClose" aria-label="Закрыть">×</button></div>
+    <h2 id="dialogTitle"></h2><div id="dialogContent" class="dialog-content"></div>
+  </dialog>
+</div>
+</body>
+</html>
